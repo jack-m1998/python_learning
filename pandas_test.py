@@ -16,6 +16,5 @@ def readExcel():
     print(df.shape)
 
 
-
 if __name__ == '__main__':
     readExcel()
