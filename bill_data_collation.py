@@ -77,7 +77,7 @@ def data_classification(input_excel_name, output_dir, column_name):
             with ExcelWriter(output_path, engine='openpyxl', mode='a', if_sheet_exists='new') as writer:
                 group.to_excel(writer, sheet_name=input_filename, index=False)
 
-    print(f"=================分类完成：{base_name}================= \n")
+    print(f"=================分类完成：{base_name}=================\n")
 
 
 if __name__ == '__main__':
