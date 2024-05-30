@@ -80,6 +80,34 @@ def data_classification(input_excel_name, output_dir, column_name):
     print(f"=================分类完成：{base_name}=================\n")
 
 
+def data_handle(input_excel_name):
+    # input_filename = os.path.splitext(os.path.basename(input_excel_name))[0]
+    sheet_name = 'Sheet1'
+    try:
+        # 尝试加载数据
+        df = pd.read_excel(input_excel_name, sheet_name=sheet_name)
+    except FileNotFoundError:
+        print(f"错误：文件 '{input_excel_name}' 不存在。")
+        return
+
+    # df['零售价单价'] = 70
+    # df['零售价折扣'] = 0.7777
+    # df['促销价单价'] = df['零售价单价'] * df['零售价折扣']
+    #
+    # # 保存小数点后一位
+    # df['促销价单价'] = df['促销价单价'].round(1)
+    #
+    # df['对账单价'] = 60
+
+    # 计算差异，并根据条件设置“差异”列的值
+    df['差异'] = df.apply(lambda row: '无' if row['零售价单价'] - row['对账单价'] == 0 else '有', axis=1)
+
+    # output_dir = r'测试1'
+    # output_path = os.path.join(output_dir, (f"{input_filename}_handle.xlsx"))
+
+    df.to_excel(input_excel_name, sheet_name=sheet_name, index=False)
+
+
 if __name__ == '__main__':
     # excelName = r'测试1\4月订单明细表.xlsx'
     # outputDir = r'测试1\output'
@@ -92,5 +120,7 @@ if __name__ == '__main__':
         (r'测试1\销售出货单.xlsx', r'测试1\分类结果', '买家账号'),
     ]
 
-    for excelName, outputDir, columnName in excel_files:
-        data_classification(excelName, outputDir, columnName)
+    data_handle(r'测试1\4月订单明细表_handle.xlsx')
+
+    # for excelName, outputDir, columnName in excel_files:
+    #     data_classification(excelName, outputDir, columnName)
