@@ -80,7 +80,7 @@ def data_classification(input_excel_name, output_dir, column_name):
     print(f"=================分类完成：{base_name}=================\n")
 
 
-def data_handle(input_excel_name):
+def data_handle(input_excel_name, discount_excel_name):
     # input_filename = os.path.splitext(os.path.basename(input_excel_name))[0]
     sheet_name = 'Sheet1'
     try:
@@ -89,6 +89,20 @@ def data_handle(input_excel_name):
     except FileNotFoundError:
         print(f"错误：文件 '{input_excel_name}' 不存在。")
         return
+
+    try:
+        # 尝试加载折扣表
+        discount_df = pd.read_excel(discount_excel_name, sheet_name=sheet_name)
+    except FileNotFoundError:
+        print(f"错误：文件 '{discount_excel_name}' 不存在。")
+        return
+
+    # 将折扣信息转化为字典,并匹配折扣信息
+    discount_dict = discount_df.set_index('买家帐号')['零售价折扣'].to_dict()
+    df['零售价折扣'] = df['买家帐号'].map(discount_dict)
+
+    # 合并数据,将折扣匹配到对应的买家
+    # df = pd.merge(df, discount_df, on='买家帐号', how='left')
 
     # df['零售价单价'] = 70
     # df['零售价折扣'] = 0.7777
@@ -120,7 +134,7 @@ if __name__ == '__main__':
         (r'测试1\销售出货单.xlsx', r'测试1\分类结果', '买家账号'),
     ]
 
-    data_handle(r'测试1\4月订单明细表_handle.xlsx')
+    data_handle(r'测试1\4月订单明细表_handle.xlsx', r'测试1\店铺折扣.xlsx')
 
     # for excelName, outputDir, columnName in excel_files:
     #     data_classification(excelName, outputDir, columnName)
