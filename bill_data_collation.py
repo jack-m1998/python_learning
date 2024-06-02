@@ -33,6 +33,14 @@ def save_groups(grouped, sheet_name, output_dir):
 
 
 def data_classification(input_excel_name, output_dir, first_column_name, second_column_name):
+    """
+    将文件根据一级列和二级列分类，并保存到指定路径
+    :param input_excel_name: 输入文件路径
+    :param output_dir: 输出文件路劲
+    :param first_column_name: 一级分类列
+    :param second_column_name: 二级分类列（当一列分类列中包含'*'符号时，根据二级分类列分类）
+    :return: 无
+    """
     base_name = os.path.basename(input_excel_name)
     print(f"================= 开始分类：{base_name} ==============")
 
