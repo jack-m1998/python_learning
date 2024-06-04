@@ -117,7 +117,7 @@ def help():
 if __name__ == '__main__':
     """
     用法：py MobaXterm.py name 21.4    #21.4为Mobaxterm的版本号，更具具体版本号填写
-    
+    参考url：https://www.jb51.net/program/288849lwe.htm
     """
     if len(sys.argv) != 3:
         help()
