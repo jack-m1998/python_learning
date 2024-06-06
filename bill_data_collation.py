@@ -165,6 +165,94 @@ def data_handle(input_excel_name, discount_excel_name):
     # output_path = os.path.join(output_dir, (f"{input_filename}_handle.xlsx"))
 
     df.to_excel(input_excel_name, sheet_name=sheet_name, index=False)
+    print(f'{input_excel_name} 处理完成')
+
+
+def data_handle_ddmx(input_excel_name, discount_excel_name):
+    # input_filename = os.path.splitext(os.path.basename(input_excel_name))[0]
+    sheet_name = 'Sheet1'
+    try:
+        # 尝试加载数据
+        df = pd.read_excel(input_excel_name, sheet_name=sheet_name)
+    except FileNotFoundError:
+        print(f"错误：文件 '{input_excel_name}' 不存在。")
+        return
+
+    try:
+        # 尝试加载折扣表
+        discount_df = pd.read_excel(discount_excel_name, sheet_name=sheet_name)
+    except FileNotFoundError:
+        print(f"错误：文件 '{discount_excel_name}' 不存在。")
+        return
+
+    # 将折扣信息转化为字典,并匹配折扣信息
+    discount_dict = discount_df.set_index('买家账号')['折扣'].to_dict()
+    df['折扣'] = df['买家账号'].map(discount_dict)
+    df['单价'] = df['商品单价'] / df['折扣']
+    df['对账单价'] = (df['单价'] * df['折扣']).round(3)
+    df['对账金额'] = (df['对账单价'] * df['数量']).round(3)
+    df['差异'] = df['商品金额'] - df['对账金额']
+
+    df.to_excel(input_excel_name, sheet_name=sheet_name, index=False)
+    print(f'{input_excel_name} 处理完成')
+
+
+def data_handle_xschd(input_excel_name, discount_excel_name):
+    # input_filename = os.path.splitext(os.path.basename(input_excel_name))[0]
+    sheet_name = 'Sheet1'
+    try:
+        # 尝试加载数据
+        df = pd.read_excel(input_excel_name, sheet_name=sheet_name)
+    except FileNotFoundError:
+        print(f"错误：文件 '{input_excel_name}' 不存在。")
+        return
+
+    try:
+        # 尝试加载折扣表
+        discount_df = pd.read_excel(discount_excel_name, sheet_name=sheet_name)
+    except FileNotFoundError:
+        print(f"错误：文件 '{discount_excel_name}' 不存在。")
+        return
+
+    # 将折扣信息转化为字典,并匹配折扣信息
+    discount_dict = discount_df.set_index('买家账号')['折扣'].to_dict()
+    df['折扣'] = df['买家账号'].map(discount_dict)
+    df['单价'] = df['售价'] / df['折扣']
+    df['对账单价'] = (df['单价'] * df['折扣']).round(3)
+    df['对账金额'] = (df['对账单价'] * df['实发数量']).round(3)
+    df['差异'] = df['基本金额'] - df['对账金额']
+
+    df.to_excel(input_excel_name, sheet_name=sheet_name, index=False)
+    print(f'{input_excel_name} 处理完成')
+
+
+def data_handle_xsthd(input_excel_name, discount_excel_name):
+    # input_filename = os.path.splitext(os.path.basename(input_excel_name))[0]
+    sheet_name = 'Sheet1'
+    try:
+        # 尝试加载数据
+        df = pd.read_excel(input_excel_name, sheet_name=sheet_name)
+    except FileNotFoundError:
+        print(f"错误：文件 '{input_excel_name}' 不存在。")
+        return
+
+    try:
+        # 尝试加载折扣表
+        discount_df = pd.read_excel(discount_excel_name, sheet_name=sheet_name)
+    except FileNotFoundError:
+        print(f"错误：文件 '{discount_excel_name}' 不存在。")
+        return
+
+    # 将折扣信息转化为字典,并匹配折扣信息
+    discount_dict = discount_df.set_index('买家账号')['折扣'].to_dict()
+    df['折扣'] = df['买家账号'].map(discount_dict)
+    df['单价'] = df['单价'] / df['折扣']
+    df['对账单价'] = (df['单价'] * df['折扣']).round(3)
+    df['对账金额'] = (df['对账单价'] * df['申请数量']).round(3)
+    df['差异'] = df['申请金额'] - df['对账金额']
+
+    df.to_excel(input_excel_name, sheet_name=sheet_name, index=False)
+    print(f'{input_excel_name} 处理完成')
 
 
 if __name__ == '__main__':
@@ -177,11 +265,30 @@ if __name__ == '__main__':
     #   参数2：输出文件路劲
     #   参数3：一级分类列
     #   参数4：二级分类列（当一列分类列中包含'*'符号时，根据二级分类列分类）
+    # excel_files = [
+    #     (r'测试1\4月订单明细表.xlsx', r'测试1\分类结果', '买家帐号', '店铺'),
+    #     (r'测试1\余额变动明细.xlsx', r'测试1\分类结果', '客户', '店铺'),
+    #     (r'测试1\销售退货单.xlsx', r'测试1\分类结果', '买家帐号', '店铺'),
+    #     (r'测试1\销售出货单.xlsx', r'测试1\分类结果', '买家账号', '店铺'),
+    # ]
+
+    # 订单明细表数据处理
+    data_handle_ddmx(r'5月对账单\5月订单明细表.xlsx', r'5月对账单\erp客户对应折扣.xlsx')
+
+    # 销售出库单数据处理
+    data_handle_xschd(r'5月对账单\5月销售出库单（分销商）.xlsx', r'5月对账单\erp客户对应折扣.xlsx')
+    data_handle_xschd(r'5月对账单\5月销售出库单（聚货通）.xlsx', r'5月对账单\erp客户对应折扣.xlsx')
+
+    # 销售退货单数据处理
+    data_handle_xsthd(r'5月对账单\5月销售退货单（分销商）.xlsx', r'5月对账单\erp客户对应折扣.xlsx')
+    data_handle_xsthd(r'5月对账单\5月销售退货单（聚货通）.xlsx', r'5月对账单\erp客户对应折扣.xlsx')
+
     excel_files = [
-        (r'测试1\4月订单明细表.xlsx', r'测试1\分类结果', '买家帐号', '店铺'),
-        (r'测试1\余额变动明细.xlsx', r'测试1\分类结果', '客户', '店铺'),
-        (r'测试1\销售退货单.xlsx', r'测试1\分类结果', '买家帐号', '店铺'),
-        (r'测试1\销售出货单.xlsx', r'测试1\分类结果', '买家账号', '店铺'),
+        (r'5月对账单\5月订单明细表.xlsx', r'5月对账单\分类结果', '买家账号', '平台站点'),
+        (r'5月对账单\5月销售出库单（分销商）.xlsx', r'5月对账单\分类结果', '买家账号', '店铺'),
+        (r'5月对账单\5月销售出库单（聚货通）.xlsx', r'5月对账单\分类结果', '买家账号', '店铺'),
+        (r'5月对账单\5月销售退货单（分销商）.xlsx', r'5月对账单\分类结果', '买家账号', '店铺名称'),
+        (r'5月对账单\5月销售退货单（聚货通）.xlsx', r'5月对账单\分类结果', '买家账号', '店铺名称'),
     ]
 
     # data_handle(r'测试1\4月订单明细表_handle.xlsx', r'测试1\店铺折扣.xlsx')
