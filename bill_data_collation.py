@@ -125,6 +125,76 @@ def data_classification(input_excel_name, output_dir, first_column_name, second_
     print(f"=================分类完成：{base_name}=================\n")
 
 
+def data_classification_new(input_excel_name, output_dir, first_column_name, second_column_name):
+    """
+    将文件根据一级列和二级列分类，并保存到指定路径
+    :param input_excel_name: 输入文件路径
+    :param output_dir: 输出文件路劲
+    :param first_column_name: 一级分类列
+    :param second_column_name: 二级分类列（为空时按照一级分类列分类）
+    :return: 无
+    """
+    base_name = os.path.basename(input_excel_name)
+    print(f"================= 开始分类：{base_name} ==============")
+
+    sheet_name = 'Sheet1'
+    try:
+        # 尝试加载数据
+        df = pd.read_excel(input_excel_name, sheet_name=sheet_name)
+    except FileNotFoundError:
+        print(f"错误：文件 '{input_excel_name}' 不存在。")
+        return
+    except ValueError as e:
+        if 'No sheet named' in str(e):
+            print(f"错误：'{sheet_name}' 工作簿不存在于文件中。")
+        else:
+            print(f"未知的ValueError: {e}")
+        return
+    except Exception as e:
+        print(f"读取Excel文件时发生未知错误：{e}")
+        return
+
+    # 检查买家账号列是否存在
+    if first_column_name not in df.columns:
+        print(f"错误：找不到'{first_column_name}'列。")
+        return
+
+    # 检查输出目录是否存在，如果不存在则创建
+    if not os.path.exists(output_dir):
+        os.makedirs(output_dir)
+
+    # 二级分类列为空时按照一级分类列分类
+    output_sheet_name = os.path.splitext(os.path.basename(input_excel_name))[0]
+
+    if len(second_column_name) == 0:
+        normal_grouped = df.groupby(first_column_name)
+        save_groups(normal_grouped, output_sheet_name, output_dir)
+    else:
+        # 数据分类（先根据一级分类列分将通济天和其他分类，然后根据二级分类列分类）
+        tjt_mask = df[first_column_name].str.contains('通济天')
+        normal_accounts = df[~tjt_mask]
+        tjt_accounts = df[tjt_mask]
+
+        # 输出工作簿名称
+
+        # 处理非通济天的买家账号,根据‘买家账号分类’
+        normal_grouped = normal_accounts.groupby(second_column_name)
+        save_groups(normal_grouped, output_sheet_name, output_dir)
+
+        # 处理通济天的买家账号,根据‘店铺’列分类
+        if not tjt_accounts.empty:
+            if first_column_name not in df.columns:
+                print(f"错误：找不到'{first_column_name}'列。")
+                return
+            else:
+                star_grouped = tjt_accounts.groupby(first_column_name)
+                save_groups(star_grouped, output_sheet_name, output_dir)
+
+
+
+    print(f"=================分类完成：{base_name}=================\n")
+
+
 def data_handle(input_excel_name, discount_excel_name):
     # input_filename = os.path.splitext(os.path.basename(input_excel_name))[0]
     sheet_name = 'Sheet1'
@@ -283,15 +353,26 @@ if __name__ == '__main__':
     data_handle_xsthd(r'5月对账单\5月销售退货单（分销商）.xlsx', r'5月对账单\erp客户对应折扣.xlsx')
     data_handle_xsthd(r'5月对账单\5月销售退货单（聚货通）.xlsx', r'5月对账单\erp客户对应折扣.xlsx')
 
+    # excel_files = [
+    #     (r'5月对账单\5月订单明细表.xlsx', r'5月对账单\分类结果', '买家账号', '平台站点'),
+    #     (r'5月对账单\5月销售出库单（分销商）.xlsx', r'5月对账单\分类结果', '买家账号', '店铺'),
+    #     (r'5月对账单\5月销售出库单（聚货通）.xlsx', r'5月对账单\分类结果', '买家账号', '店铺'),
+    #     (r'5月对账单\5月销售退货单（分销商）.xlsx', r'5月对账单\分类结果', '买家账号', '店铺名称'),
+    #     (r'5月对账单\5月销售退货单（聚货通）.xlsx', r'5月对账单\分类结果', '买家账号', '店铺名称'),
+    # ]
+    #
+    # # data_handle(r'测试1\4月订单明细表_handle.xlsx', r'测试1\店铺折扣.xlsx')
+    #
+    # for excelName, outputDir, firstColumnName, SecondColumnName in excel_files:
+    #     data_classification(excelName, outputDir, firstColumnName, SecondColumnName)
+
     excel_files = [
-        (r'5月对账单\5月订单明细表.xlsx', r'5月对账单\分类结果', '买家账号', '平台站点'),
-        (r'5月对账单\5月销售出库单（分销商）.xlsx', r'5月对账单\分类结果', '买家账号', '店铺'),
-        (r'5月对账单\5月销售出库单（聚货通）.xlsx', r'5月对账单\分类结果', '买家账号', '店铺'),
-        (r'5月对账单\5月销售退货单（分销商）.xlsx', r'5月对账单\分类结果', '买家账号', '店铺名称'),
-        (r'5月对账单\5月销售退货单（聚货通）.xlsx', r'5月对账单\分类结果', '买家账号', '店铺名称'),
+        (r'5月对账单\5月订单明细表.xlsx', r'5月对账单\分类结果', '平台站点', '买家账号'),
+        (r'5月对账单\5月销售出库单（分销商）.xlsx', r'5月对账单\分类结果', '店铺', ''),
+        (r'5月对账单\5月销售出库单（聚货通）.xlsx', r'5月对账单\分类结果', '店铺', '买家账号'),
+        (r'5月对账单\5月销售退货单（分销商）.xlsx', r'5月对账单\分类结果', '店铺名称', ''),
+        (r'5月对账单\5月销售退货单（聚货通）.xlsx', r'5月对账单\分类结果', '店铺名称', '买家账号'),
     ]
 
-    # data_handle(r'测试1\4月订单明细表_handle.xlsx', r'测试1\店铺折扣.xlsx')
-
     for excelName, outputDir, firstColumnName, SecondColumnName in excel_files:
-        data_classification(excelName, outputDir, firstColumnName, SecondColumnName)
+        data_classification_new(excelName, outputDir, firstColumnName, SecondColumnName)
