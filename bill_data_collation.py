@@ -258,6 +258,7 @@ def data_handle_ddmx(input_excel_name, discount_excel_name):
     # 将折扣信息转化为字典,并匹配折扣信息
     discount_dict = discount_df.set_index('买家账号')['折扣'].to_dict()
     df['折扣'] = df['买家账号'].map(discount_dict)
+    df['折扣'] = df['折扣'].fillna(df['平台站点'].map(discount_dict))
     df['单价'] = df['商品单价'] / df['折扣']
     df['对账单价'] = (df['单价'] * df['折扣']).round(3)
     df['对账金额'] = (df['对账单价'] * df['数量']).round(3)
@@ -287,6 +288,7 @@ def data_handle_xschd(input_excel_name, discount_excel_name):
     # 将折扣信息转化为字典,并匹配折扣信息
     discount_dict = discount_df.set_index('买家账号')['折扣'].to_dict()
     df['折扣'] = df['买家账号'].map(discount_dict)
+    df['折扣'] = df['折扣'].fillna(df['店铺'].map(discount_dict))
     df['单价'] = df['售价'] / df['折扣']
     df['对账单价'] = (df['单价'] * df['折扣']).round(3)
     df['对账金额'] = (df['对账单价'] * df['实发数量']).round(3)
@@ -316,6 +318,7 @@ def data_handle_xsthd(input_excel_name, discount_excel_name):
     # 将折扣信息转化为字典,并匹配折扣信息
     discount_dict = discount_df.set_index('买家账号')['折扣'].to_dict()
     df['折扣'] = df['买家账号'].map(discount_dict)
+    df['折扣'] = df['折扣'].fillna(df['店铺名称'].map(discount_dict))
     df['单价'] = df['单价'] / df['折扣']
     df['对账单价'] = (df['单价'] * df['折扣']).round(3)
     df['对账金额'] = (df['对账单价'] * df['申请数量']).round(3)
