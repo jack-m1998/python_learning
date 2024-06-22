@@ -171,7 +171,7 @@ def data_classification_new(input_excel_name, output_dir, first_column_name, sec
         save_groups(normal_grouped, output_sheet_name, output_dir)
     else:
         # 数据分类（先根据一级分类列分将通济天和其他分类，然后根据二级分类列分类）
-        tjt_mask = df[first_column_name].str.contains('通济天')
+        tjt_mask = df[first_column_name].fillna('').str.contains('通济天')
         normal_accounts = df[~tjt_mask]
         tjt_accounts = df[tjt_mask]
 
@@ -372,6 +372,8 @@ if __name__ == '__main__':
         (r'5月对账单\5月销售出库单（聚货通）.xlsx', r'5月对账单\分类结果', '店铺', '买家账号'),
         (r'5月对账单\5月销售退货单（分销商）.xlsx', r'5月对账单\分类结果', '店铺名称', ''),
         (r'5月对账单\5月销售退货单（聚货通）.xlsx', r'5月对账单\分类结果', '店铺名称', '买家账号'),
+        (r'5月对账单\5月余额变动明细.xlsx', r'5月对账单\分类结果', '店铺', '客户'),
+        (r'5月对账单\5月线下打款明细表.xlsx', r'5月对账单\分类结果', '备注', '汇款客户（管易名称）'),
     ]
 
     for excelName, outputDir, firstColumnName, SecondColumnName in excel_files:
