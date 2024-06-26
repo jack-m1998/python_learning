@@ -345,38 +345,36 @@ if __name__ == '__main__':
     #     (r'测试1\销售出货单.xlsx', r'测试1\分类结果', '买家账号', '店铺'),
     # ]
 
+    intput_folder = '5月对账单'
+    intput_files = ('5月订单明细表.xlsx',  # 0
+                    '5月销售出库单（分销商）.xlsx', '5月销售出库单（聚货通）.xlsx',  # 1,2
+                    '5月销售退货单（分销商）.xlsx', '5月销售退货单（聚货通）.xlsx',  # 3,4
+                    '5月余额变动明细.xlsx', '5月线下打款明细表.xlsx',  # 5,6
+                    'erp客户对应折扣.xlsx')  # 7
+
+    intput_file_paths = [os.path.join(intput_folder, file_name) for file_name in intput_files]
+
+    output_path = r'5月对账单\分类结果'
+
     # 订单明细表数据处理
-    data_handle_ddmx(r'5月对账单\5月订单明细表.xlsx', r'5月对账单\erp客户对应折扣.xlsx')
+    data_handle_ddmx(intput_file_paths[0], intput_file_paths[7])
 
     # 销售出库单数据处理
-    data_handle_xschd(r'5月对账单\5月销售出库单（分销商）.xlsx', r'5月对账单\erp客户对应折扣.xlsx')
-    data_handle_xschd(r'5月对账单\5月销售出库单（聚货通）.xlsx', r'5月对账单\erp客户对应折扣.xlsx')
+    data_handle_xschd(intput_file_paths[1], intput_file_paths[7])
+    data_handle_xschd(intput_file_paths[2], intput_file_paths[7])
 
     # 销售退货单数据处理
-    data_handle_xsthd(r'5月对账单\5月销售退货单（分销商）.xlsx', r'5月对账单\erp客户对应折扣.xlsx')
-    data_handle_xsthd(r'5月对账单\5月销售退货单（聚货通）.xlsx', r'5月对账单\erp客户对应折扣.xlsx')
-
-    # excel_files = [
-    #     (r'5月对账单\5月订单明细表.xlsx', r'5月对账单\分类结果', '买家账号', '平台站点'),
-    #     (r'5月对账单\5月销售出库单（分销商）.xlsx', r'5月对账单\分类结果', '买家账号', '店铺'),
-    #     (r'5月对账单\5月销售出库单（聚货通）.xlsx', r'5月对账单\分类结果', '买家账号', '店铺'),
-    #     (r'5月对账单\5月销售退货单（分销商）.xlsx', r'5月对账单\分类结果', '买家账号', '店铺名称'),
-    #     (r'5月对账单\5月销售退货单（聚货通）.xlsx', r'5月对账单\分类结果', '买家账号', '店铺名称'),
-    # ]
-    #
-    # # data_handle(r'测试1\4月订单明细表_handle.xlsx', r'测试1\店铺折扣.xlsx')
-    #
-    # for excelName, outputDir, firstColumnName, SecondColumnName in excel_files:
-    #     data_classification(excelName, outputDir, firstColumnName, SecondColumnName)
+    data_handle_xsthd(intput_file_paths[3], intput_file_paths[7])
+    data_handle_xsthd(intput_file_paths[4], intput_file_paths[7])
 
     excel_files = [
-        (r'5月对账单\5月订单明细表.xlsx', r'5月对账单\分类结果', '平台站点', '买家账号'),
-        (r'5月对账单\5月销售出库单（分销商）.xlsx', r'5月对账单\分类结果', '店铺', ''),
-        (r'5月对账单\5月销售出库单（聚货通）.xlsx', r'5月对账单\分类结果', '店铺', '买家账号'),
-        (r'5月对账单\5月销售退货单（分销商）.xlsx', r'5月对账单\分类结果', '店铺名称', ''),
-        (r'5月对账单\5月销售退货单（聚货通）.xlsx', r'5月对账单\分类结果', '店铺名称', '买家账号'),
-        (r'5月对账单\5月余额变动明细.xlsx', r'5月对账单\分类结果', '店铺', '客户'),
-        (r'5月对账单\5月线下打款明细表.xlsx', r'5月对账单\分类结果', '备注', '汇款客户（管易名称）'),
+        (intput_file_paths[0], output_path, '平台站点', '买家账号'),
+        (intput_file_paths[1], output_path, '店铺', ''),
+        (intput_file_paths[2], output_path, '店铺', '买家账号'),
+        (intput_file_paths[3], output_path, '店铺名称', ''),
+        (intput_file_paths[4], output_path, '店铺名称', '买家账号'),
+        (intput_file_paths[5], output_path, '店铺', '客户'),
+        (intput_file_paths[6], output_path, '备注', '汇款客户（管易名称）'),
     ]
 
     for excelName, outputDir, firstColumnName, SecondColumnName in excel_files:
