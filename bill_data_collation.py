@@ -316,9 +316,8 @@ if __name__ == '__main__':
         (TableType.XSTHD, intput_file_paths[4], intput_file_paths[7]),
     ]
 
-    # for tableType, intput_excel1, intput_excel2 in bill_excel_files:
-    #     data_handle(tableType, intput_excel1, intput_excel2)
-
+    for tableType, intput_excel1, intput_excel2 in bill_excel_files:
+        data_handle(tableType, intput_excel1, intput_excel2)
 
     excel_files = [
         (intput_file_paths[0], output_path, '平台站点', '买家账号'),
@@ -330,8 +329,8 @@ if __name__ == '__main__':
         (intput_file_paths[6], output_path, '备注', '汇款客户（管易名称）'),
     ]
 
-    # for excelName, outputDir, firstColumnName, SecondColumnName in excel_files:
-    #     data_classification_new(excelName, outputDir, firstColumnName, SecondColumnName)
+    for excelName, outputDir, firstColumnName, SecondColumnName in excel_files:
+        data_classification_new(excelName, outputDir, firstColumnName, SecondColumnName)
 
     new_data = pd.DataFrame({'数据': [1, 2, 3]})
     add_pivot_table_to_excel(output_path, 'test', new_data)
