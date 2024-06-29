@@ -12,6 +12,7 @@ import pandas as pd
 import os
 import re
 from enum import Enum
+from pathlib import Path
 
 
 class TableType(Enum):
@@ -252,6 +253,33 @@ def data_handle(table_type, input_excel_name, discount_excel_name):
     print(f'{input_excel_name} 处理完成')
 
 
+def add_pivot_table_to_excel(directory, sheet_name, data_frame):
+    """
+    遍历指定目录下的所有Excel文件，并向每个文件添加一个新的工作簿。
+
+    参数:
+    directory (str): 要遍历的目录路径。
+    sheet_name (str): 新工作簿的名称。
+    data_frame (pd.DataFrame): 要添加到新工作簿的数据。
+    """
+    # 设置目录路径
+    directory_path = Path(directory)
+
+    # 遍历目录下的所有Excel文件
+    for file in directory_path.glob('*.xlsx'):
+        # 检查文件是否已经包含该工作簿
+        with pd.ExcelFile(file) as excel_file:
+            if sheet_name in excel_file.sheet_names:
+                print(f"'{sheet_name}' 工作簿已存在于 '{file}' 中.")
+                continue
+
+        # 向Excel文件添加新工作簿
+        with ExcelWriter(file, engine='openpyxl', mode='a', if_sheet_exists='new') as writer:
+            data_frame.to_excel(writer, sheet_name=sheet_name, index=False)
+
+        print(f"'{file}' 已成功添加新工作簿 '{sheet_name}'.")
+
+
 if __name__ == '__main__':
     # excelName = r'测试1\4月订单明细表.xlsx'
     # outputDir = r'测试1\output'
@@ -288,8 +316,8 @@ if __name__ == '__main__':
         (TableType.XSTHD, intput_file_paths[4], intput_file_paths[7]),
     ]
 
-    for tableType, intput_excel1, intput_excel2 in bill_excel_files:
-        data_handle(tableType, intput_excel1, intput_excel2)
+    # for tableType, intput_excel1, intput_excel2 in bill_excel_files:
+    #     data_handle(tableType, intput_excel1, intput_excel2)
 
 
     excel_files = [
@@ -302,5 +330,8 @@ if __name__ == '__main__':
         (intput_file_paths[6], output_path, '备注', '汇款客户（管易名称）'),
     ]
 
-    for excelName, outputDir, firstColumnName, SecondColumnName in excel_files:
-        data_classification_new(excelName, outputDir, firstColumnName, SecondColumnName)
+    # for excelName, outputDir, firstColumnName, SecondColumnName in excel_files:
+    #     data_classification_new(excelName, outputDir, firstColumnName, SecondColumnName)
+
+    new_data = pd.DataFrame({'数据': [1, 2, 3]})
+    add_pivot_table_to_excel(output_path, 'test', new_data)
