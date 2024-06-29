@@ -11,7 +11,13 @@ from tqdm import tqdm
 import pandas as pd
 import os
 import re
+from enum import Enum
 
+
+class TableType(Enum):
+    DDMX = 1  # 订单明细表
+    XSCHD = 2  # 销售出货单
+    XSTHD = 3  # 销售退货单
 
 def clean_filename(filename):
     # 定义Windows系统中不允许的非法字符
@@ -190,12 +196,10 @@ def data_classification_new(input_excel_name, output_dir, first_column_name, sec
                 star_grouped = tjt_accounts.groupby(first_column_name)
                 save_groups(star_grouped, output_sheet_name, output_dir)
 
-
-
     print(f"=================分类完成：{base_name}=================\n")
 
 
-def data_handle(input_excel_name, discount_excel_name):
+def data_handle(table_type, input_excel_name, discount_excel_name):
     # input_filename = os.path.splitext(os.path.basename(input_excel_name))[0]
     sheet_name = 'Sheet1'
     try:
@@ -212,117 +216,37 @@ def data_handle(input_excel_name, discount_excel_name):
         print(f"错误：文件 '{discount_excel_name}' 不存在。")
         return
 
-    # 将折扣信息转化为字典,并匹配折扣信息
-    discount_dict = discount_df.set_index('买家帐号')['零售价折扣'].to_dict()
-    df['零售价折扣'] = df['买家帐号'].map(discount_dict)
-
-    # 合并数据,将折扣匹配到对应的买家
-    # df = pd.merge(df, discount_df, on='买家帐号', how='left')
-
-    # df['零售价单价'] = 70
-    # df['零售价折扣'] = 0.7777
-    # df['促销价单价'] = df['零售价单价'] * df['零售价折扣']
-    #
-    # # 保存小数点后一位
-    # df['促销价单价'] = df['促销价单价'].round(1)
-    #
-    # df['对账单价'] = 60
-
-    # 计算差异，并根据条件设置“差异”列的值
-    df['差异'] = df.apply(lambda row: '无' if row['零售价单价'] - row['对账单价'] == 0 else '有', axis=1)
-
-    # output_dir = r'测试1'
-    # output_path = os.path.join(output_dir, (f"{input_filename}_handle.xlsx"))
-
-    df.to_excel(input_excel_name, sheet_name=sheet_name, index=False)
-    print(f'{input_excel_name} 处理完成')
-
-
-def data_handle_ddmx(input_excel_name, discount_excel_name):
-    # input_filename = os.path.splitext(os.path.basename(input_excel_name))[0]
-    sheet_name = 'Sheet1'
-    try:
-        # 尝试加载数据
-        df = pd.read_excel(input_excel_name, sheet_name=sheet_name)
-    except FileNotFoundError:
-        print(f"错误：文件 '{input_excel_name}' 不存在。")
-        return
-
-    try:
-        # 尝试加载折扣表
-        discount_df = pd.read_excel(discount_excel_name, sheet_name=sheet_name)
-    except FileNotFoundError:
-        print(f"错误：文件 '{discount_excel_name}' 不存在。")
-        return
-
-    # 将折扣信息转化为字典,并匹配折扣信息
-    discount_dict = discount_df.set_index('买家账号')['折扣'].to_dict()
-    df['折扣'] = df['买家账号'].map(discount_dict)
-    df['折扣'] = df['折扣'].fillna(df['平台站点'].map(discount_dict))
-    df['单价'] = df['商品单价'] / df['折扣']
-    df['对账单价'] = (df['单价'] * df['折扣']).round(3)
-    df['对账金额'] = (df['对账单价'] * df['数量']).round(3)
-    df['差异'] = df['商品金额'] - df['对账金额']
-
-    df.to_excel(input_excel_name, sheet_name=sheet_name, index=False)
-    print(f'{input_excel_name} 处理完成')
-
-
-def data_handle_xschd(input_excel_name, discount_excel_name):
-    # input_filename = os.path.splitext(os.path.basename(input_excel_name))[0]
-    sheet_name = 'Sheet1'
-    try:
-        # 尝试加载数据
-        df = pd.read_excel(input_excel_name, sheet_name=sheet_name)
-    except FileNotFoundError:
-        print(f"错误：文件 '{input_excel_name}' 不存在。")
-        return
-
-    try:
-        # 尝试加载折扣表
-        discount_df = pd.read_excel(discount_excel_name, sheet_name=sheet_name)
-    except FileNotFoundError:
-        print(f"错误：文件 '{discount_excel_name}' 不存在。")
-        return
-
-    # 将折扣信息转化为字典,并匹配折扣信息
-    discount_dict = discount_df.set_index('买家账号')['折扣'].to_dict()
-    df['折扣'] = df['买家账号'].map(discount_dict)
-    df['折扣'] = df['折扣'].fillna(df['店铺'].map(discount_dict))
-    df['单价'] = df['售价'] / df['折扣']
-    df['对账单价'] = (df['单价'] * df['折扣']).round(3)
-    df['对账金额'] = (df['对账单价'] * df['实发数量']).round(3)
-    df['差异'] = df['基本金额'] - df['对账金额']
-
-    df.to_excel(input_excel_name, sheet_name=sheet_name, index=False)
-    print(f'{input_excel_name} 处理完成')
-
-
-def data_handle_xsthd(input_excel_name, discount_excel_name):
-    # input_filename = os.path.splitext(os.path.basename(input_excel_name))[0]
-    sheet_name = 'Sheet1'
-    try:
-        # 尝试加载数据
-        df = pd.read_excel(input_excel_name, sheet_name=sheet_name)
-    except FileNotFoundError:
-        print(f"错误：文件 '{input_excel_name}' 不存在。")
-        return
-
-    try:
-        # 尝试加载折扣表
-        discount_df = pd.read_excel(discount_excel_name, sheet_name=sheet_name)
-    except FileNotFoundError:
-        print(f"错误：文件 '{discount_excel_name}' 不存在。")
-        return
-
-    # 将折扣信息转化为字典,并匹配折扣信息
-    discount_dict = discount_df.set_index('买家账号')['折扣'].to_dict()
-    df['折扣'] = df['买家账号'].map(discount_dict)
-    df['折扣'] = df['折扣'].fillna(df['店铺名称'].map(discount_dict))
-    df['单价'] = df['单价'] / df['折扣']
-    df['对账单价'] = (df['单价'] * df['折扣']).round(3)
-    df['对账金额'] = (df['对账单价'] * df['申请数量']).round(3)
-    df['差异'] = df['申请金额'] - df['对账金额']
+    match table_type:
+        case TableType.DDMX:
+            # 将折扣信息转化为字典,并匹配折扣信息
+            discount_dict = discount_df.set_index('买家账号')['折扣'].to_dict()
+            df['折扣'] = df['买家账号'].map(discount_dict)
+            df['折扣'] = df['折扣'].fillna(df['平台站点'].map(discount_dict))
+            df['单价'] = df['商品单价'] / df['折扣']
+            df['对账单价'] = (df['单价'] * df['折扣']).round(3)
+            df['对账金额'] = (df['对账单价'] * df['数量']).round(3)
+            df['差异'] = df['商品金额'] - df['对账金额']
+        case TableType.XSCHD:
+            # 将折扣信息转化为字典,并匹配折扣信息
+            discount_dict = discount_df.set_index('买家账号')['折扣'].to_dict()
+            df['折扣'] = df['买家账号'].map(discount_dict)
+            df['折扣'] = df['折扣'].fillna(df['店铺'].map(discount_dict))
+            df['单价'] = df['售价'] / df['折扣']
+            df['对账单价'] = (df['单价'] * df['折扣']).round(3)
+            df['对账金额'] = (df['对账单价'] * df['实发数量']).round(3)
+            df['差异'] = df['基本金额'] - df['对账金额']
+        case TableType.XSTHD:
+            # 将折扣信息转化为字典,并匹配折扣信息
+            discount_dict = discount_df.set_index('买家账号')['折扣'].to_dict()
+            df['折扣'] = df['买家账号'].map(discount_dict)
+            df['折扣'] = df['折扣'].fillna(df['店铺名称'].map(discount_dict))
+            df['单价'] = df['单价'] / df['折扣']
+            df['对账单价'] = (df['单价'] * df['折扣']).round(3)
+            df['对账金额'] = (df['对账单价'] * df['申请数量']).round(3)
+            df['差异'] = df['申请金额'] - df['对账金额']
+        case _:
+            print(f"错误：文件 '{input_excel_name}' 类型错误。")
+            return
 
     df.to_excel(input_excel_name, sheet_name=sheet_name, index=False)
     print(f'{input_excel_name} 处理完成')
@@ -356,16 +280,17 @@ if __name__ == '__main__':
 
     output_path = r'5月对账单\分类结果'
 
-    # 订单明细表数据处理
-    data_handle_ddmx(intput_file_paths[0], intput_file_paths[7])
+    bill_excel_files = [
+        (TableType.DDMX, intput_file_paths[0], intput_file_paths[7]),
+        (TableType.XSCHD, intput_file_paths[1], intput_file_paths[7]),
+        (TableType.XSCHD, intput_file_paths[2], intput_file_paths[7]),
+        (TableType.XSTHD, intput_file_paths[3], intput_file_paths[7]),
+        (TableType.XSTHD, intput_file_paths[4], intput_file_paths[7]),
+    ]
 
-    # 销售出库单数据处理
-    data_handle_xschd(intput_file_paths[1], intput_file_paths[7])
-    data_handle_xschd(intput_file_paths[2], intput_file_paths[7])
+    for tableType, intput_excel1, intput_excel2 in bill_excel_files:
+        data_handle(tableType, intput_excel1, intput_excel2)
 
-    # 销售退货单数据处理
-    data_handle_xsthd(intput_file_paths[3], intput_file_paths[7])
-    data_handle_xsthd(intput_file_paths[4], intput_file_paths[7])
 
     excel_files = [
         (intput_file_paths[0], output_path, '平台站点', '买家账号'),
