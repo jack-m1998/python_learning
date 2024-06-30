@@ -253,7 +253,7 @@ def data_handle(table_type, input_excel_name, discount_excel_name):
     print(f'{input_excel_name} 处理完成')
 
 
-def add_pivot_table_to_excel(directory, sheet_name, data_frame):
+def add_pivot_table_to_excel(directory, sheet_name, template_file_):
     """
     遍历指定目录下的所有Excel文件，并向每个文件添加一个新的工作簿。
 
@@ -262,11 +262,21 @@ def add_pivot_table_to_excel(directory, sheet_name, data_frame):
     sheet_name (str): 新工作簿的名称。
     data_frame (pd.DataFrame): 要添加到新工作簿的数据。
     """
+    print(f"================= 开始数据透视 ==============")
     # 设置目录路径
     directory_path = Path(directory)
 
+    # 打开透视表模版文件
+    sheet_name_dzd = '对账单'
+    try:
+        # 尝试加载数据
+        df = pd.read_excel(template_file_, sheet_name=sheet_name_dzd)
+    except FileNotFoundError:
+        print(f"错误：文件 '{template_file_}' 不存在。")
+        return
+
     # 遍历目录下的所有Excel文件
-    for file in directory_path.glob('*.xlsx'):
+    for file in tqdm(list(directory_path.glob('*.xlsx')), desc='数据透视进度', unit='file'):
         # 检查文件是否已经包含该工作簿
         with pd.ExcelFile(file) as excel_file:
             if sheet_name in excel_file.sheet_names:
@@ -275,9 +285,10 @@ def add_pivot_table_to_excel(directory, sheet_name, data_frame):
 
         # 向Excel文件添加新工作簿
         with ExcelWriter(file, engine='openpyxl', mode='a', if_sheet_exists='new') as writer:
-            data_frame.to_excel(writer, sheet_name=sheet_name, index=False)
+            df.to_excel(writer, sheet_name=sheet_name, index=False)
 
-        print(f"'{file}' 已成功添加新工作簿 '{sheet_name}'.")
+        # print(f"'{file}' 已成功添加新工作簿 '{sheet_name}'.")
+    print(f"================= 数据透视结束 ==============")
 
 
 if __name__ == '__main__':
@@ -335,5 +346,6 @@ if __name__ == '__main__':
         data_classification_new(excelName, outputDir, firstColumnName, SecondColumnName)
 
     # 账单数据透视
-    new_data = pd.DataFrame({'数据': [1, 2, 3]})
-    add_pivot_table_to_excel(output_path, 'test', new_data)
+    # new_data = pd.DataFrame({'数据': [1, 2, 3]})
+    template_file = r'5月对账单\对账单.xlsx'
+    add_pivot_table_to_excel(output_path, '对账单', template_file)
