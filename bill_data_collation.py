@@ -241,7 +241,7 @@ def data_handle(table_type, input_excel_name, discount_excel_name):
             discount_dict = discount_df.set_index('买家账号')['折扣'].to_dict()
             df['折扣'] = df['买家账号'].map(discount_dict)
             df['折扣'] = df['折扣'].fillna(df['店铺名称'].map(discount_dict))
-            df['单价'] = df['单价'] / df['折扣']
+            df['单价'] = df['售价'] / df['折扣']
             df['对账单价'] = (df['单价'] * df['折扣']).round(3)
             df['对账金额'] = (df['对账单价'] * df['申请数量']).round(3)
             df['差异'] = df['申请金额'] - df['对账金额']
@@ -316,6 +316,7 @@ if __name__ == '__main__':
         (TableType.XSTHD, intput_file_paths[4], intput_file_paths[7]),
     ]
 
+    # 账单数据处理
     for tableType, intput_excel1, intput_excel2 in bill_excel_files:
         data_handle(tableType, intput_excel1, intput_excel2)
 
@@ -329,8 +330,10 @@ if __name__ == '__main__':
         (intput_file_paths[6], output_path, '备注', '汇款客户（管易名称）'),
     ]
 
+    # 账单数据分类
     for excelName, outputDir, firstColumnName, SecondColumnName in excel_files:
         data_classification_new(excelName, outputDir, firstColumnName, SecondColumnName)
 
+    # 账单数据透视
     new_data = pd.DataFrame({'数据': [1, 2, 3]})
     add_pivot_table_to_excel(output_path, 'test', new_data)
