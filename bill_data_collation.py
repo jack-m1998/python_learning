@@ -234,6 +234,13 @@ def data_handle(table_type, input_excel_name, discount_excel_name):
         return
 
     try:
+        # 初始化新建列, 并保证新建列的排序
+        df['单价'] = 0
+        df['折扣'] = 0
+        df['对账单价'] = 0
+        df['对账金额'] = 0
+        df['差异'] = 0
+
         match table_type:
             case TableType.DDMX:
                 # 将折扣信息转化为字典,并匹配折扣信息
@@ -344,16 +351,16 @@ if __name__ == '__main__':
     #     (r'测试1\销售出货单.xlsx', r'测试1\分类结果', '买家账号', '店铺'),
     # ]
 
-    intput_folder = '5月对账单'
-    intput_files = ('5月订单明细表.xlsx',  # 0
-                    '5月销售出库单（分销商）.xlsx', '5月销售出库单（聚货通）.xlsx',  # 1,2
-                    '5月销售退货单（分销商）.xlsx', '5月销售退货单（聚货通）.xlsx',  # 3,4
-                    '5月余额变动明细.xlsx', '5月线下打款明细表.xlsx',  # 5,6
+    intput_folder = '6月对账单'
+    intput_files = ('6月订单明细表.xlsx',  # 0
+                    '6月销售出库单（分销商）.xlsx', '6月销售出库单（聚货通）.xlsx',  # 1,2
+                    '6月销售退货单（分销商）.xlsx', '6月销售退货单（聚货通）.xlsx',  # 3,4
+                    '6月余额变动明细表.xlsx', '6月线下打款明细表.xlsx',  # 5,6
                     'erp客户对应折扣.xlsx')  # 7
 
     intput_file_paths = [os.path.join(intput_folder, file_name) for file_name in intput_files]
 
-    output_path = r'5月对账单\分类结果'
+    output_path = r'6月对账单\分类结果'
 
     bill_excel_files = [
         (TableType.DDMX, intput_file_paths[0], intput_file_paths[7]),
@@ -383,5 +390,5 @@ if __name__ == '__main__':
 
     # 账单数据透视
     # new_data = pd.DataFrame({'数据': [1, 2, 3]})
-    template_file = r'5月对账单\对账单.xlsx'
+    template_file = r'6月对账单\对账单.xlsx'
     add_pivot_table_to_excel(output_path, '对账单', template_file)
