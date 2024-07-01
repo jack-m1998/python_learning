@@ -20,6 +20,7 @@ class TableType(Enum):
     XSCHD = 2  # 销售出货单
     XSTHD = 3  # 销售退货单
 
+
 def clean_filename(filename):
     # 定义Windows系统中不允许的非法字符
     invalid_chars = r'[\<>:\"/|?*]'
@@ -168,34 +169,43 @@ def data_classification_new(input_excel_name, output_dir, first_column_name, sec
 
     # 检查输出目录是否存在，如果不存在则创建
     if not os.path.exists(output_dir):
-        os.makedirs(output_dir)
+        try:
+            os.makedirs(output_dir)
+        except OSError as e:
+            print(f"创建目录 '{output_dir}' 时发生错误：{e}")
+            return
 
     # 二级分类列为空时按照一级分类列分类
     output_sheet_name = os.path.splitext(os.path.basename(input_excel_name))[0]
 
-    if len(second_column_name) == 0:
-        normal_grouped = df.groupby(first_column_name)
-        save_groups(normal_grouped, output_sheet_name, output_dir)
-    else:
-        # 数据分类（先根据一级分类列分将通济天和其他分类，然后根据二级分类列分类）
-        tjt_mask = df[first_column_name].fillna('').str.contains('通济天')
-        normal_accounts = df[~tjt_mask]
-        tjt_accounts = df[tjt_mask]
+    try:
+        if len(second_column_name) == 0:
+            normal_grouped = df.groupby(first_column_name)
+            save_groups(normal_grouped, output_sheet_name, output_dir)
+        else:
+            # 数据分类（先根据一级分类列分将通济天和其他分类，然后根据二级分类列分类）
+            tjt_mask = df[first_column_name].fillna('').str.contains('通济天')
+            normal_accounts = df[~tjt_mask]
+            tjt_accounts = df[tjt_mask]
 
-        # 输出工作簿名称
+            # 输出工作簿名称
 
-        # 处理非通济天的买家账号,根据‘买家账号分类’
-        normal_grouped = normal_accounts.groupby(second_column_name)
-        save_groups(normal_grouped, output_sheet_name, output_dir)
+            # 处理非通济天的买家账号,根据‘买家账号分类’
+            normal_grouped = normal_accounts.groupby(second_column_name)
+            save_groups(normal_grouped, output_sheet_name, output_dir)
 
-        # 处理通济天的买家账号,根据‘店铺’列分类
-        if not tjt_accounts.empty:
-            if first_column_name not in df.columns:
-                print(f"错误：找不到'{first_column_name}'列。")
-                return
-            else:
-                star_grouped = tjt_accounts.groupby(first_column_name)
-                save_groups(star_grouped, output_sheet_name, output_dir)
+            # 处理通济天的买家账号,根据‘店铺’列分类
+            if not tjt_accounts.empty:
+                if first_column_name not in df.columns:
+                    print(f"错误：找不到'{first_column_name}'列。")
+                    return
+                else:
+                    star_grouped = tjt_accounts.groupby(first_column_name)
+                    save_groups(star_grouped, output_sheet_name, output_dir)
+    except KeyError as e:
+        print(f"处理数据时发生键错误：{e}")
+    except Exception as e:
+        print(f"处理数据时发生未知错误：{e}")
 
     print(f"=================分类完成：{base_name}=================\n")
 
@@ -209,6 +219,9 @@ def data_handle(table_type, input_excel_name, discount_excel_name):
     except FileNotFoundError:
         print(f"错误：文件 '{input_excel_name}' 不存在。")
         return
+    except Exception as e:
+        print(f"读取文件 '{input_excel_name}' 时发生未知错误：{e}")
+        return
 
     try:
         # 尝试加载折扣表
@@ -216,40 +229,55 @@ def data_handle(table_type, input_excel_name, discount_excel_name):
     except FileNotFoundError:
         print(f"错误：文件 '{discount_excel_name}' 不存在。")
         return
+    except Exception as e:
+        print(f"读取文件 '{discount_excel_name}' 时发生未知错误：{e}")
+        return
 
-    match table_type:
-        case TableType.DDMX:
-            # 将折扣信息转化为字典,并匹配折扣信息
-            discount_dict = discount_df.set_index('买家账号')['折扣'].to_dict()
-            df['折扣'] = df['买家账号'].map(discount_dict)
-            df['折扣'] = df['折扣'].fillna(df['平台站点'].map(discount_dict))
-            df['单价'] = df['商品单价'] / df['折扣']
-            df['对账单价'] = (df['单价'] * df['折扣']).round(3)
-            df['对账金额'] = (df['对账单价'] * df['数量']).round(3)
-            df['差异'] = df['商品金额'] - df['对账金额']
-        case TableType.XSCHD:
-            # 将折扣信息转化为字典,并匹配折扣信息
-            discount_dict = discount_df.set_index('买家账号')['折扣'].to_dict()
-            df['折扣'] = df['买家账号'].map(discount_dict)
-            df['折扣'] = df['折扣'].fillna(df['店铺'].map(discount_dict))
-            df['单价'] = df['售价'] / df['折扣']
-            df['对账单价'] = (df['单价'] * df['折扣']).round(3)
-            df['对账金额'] = (df['对账单价'] * df['实发数量']).round(3)
-            df['差异'] = df['基本金额'] - df['对账金额']
-        case TableType.XSTHD:
-            # 将折扣信息转化为字典,并匹配折扣信息
-            discount_dict = discount_df.set_index('买家账号')['折扣'].to_dict()
-            df['折扣'] = df['买家账号'].map(discount_dict)
-            df['折扣'] = df['折扣'].fillna(df['店铺名称'].map(discount_dict))
-            df['单价'] = df['售价'] / df['折扣']
-            df['对账单价'] = (df['单价'] * df['折扣']).round(3)
-            df['对账金额'] = (df['对账单价'] * df['申请数量']).round(3)
-            df['差异'] = df['申请金额'] - df['对账金额']
-        case _:
-            print(f"错误：文件 '{input_excel_name}' 类型错误。")
-            return
+    try:
+        match table_type:
+            case TableType.DDMX:
+                # 将折扣信息转化为字典,并匹配折扣信息
+                discount_dict = discount_df.set_index('买家账号')['折扣'].to_dict()
+                df['折扣'] = df['买家账号'].map(discount_dict)
+                df['折扣'] = df['折扣'].fillna(df['平台站点'].map(discount_dict))
+                df['单价'] = df['商品单价'] / df['折扣']
+                df['对账单价'] = (df['单价'] * df['折扣']).round(3)
+                df['对账金额'] = (df['对账单价'] * df['数量']).round(3)
+                df['差异'] = df['商品金额'] - df['对账金额']
+            case TableType.XSCHD:
+                # 将折扣信息转化为字典,并匹配折扣信息
+                discount_dict = discount_df.set_index('买家账号')['折扣'].to_dict()
+                df['折扣'] = df['买家账号'].map(discount_dict)
+                df['折扣'] = df['折扣'].fillna(df['店铺'].map(discount_dict))
+                df['单价'] = df['售价'] / df['折扣']
+                df['对账单价'] = (df['单价'] * df['折扣']).round(3)
+                df['对账金额'] = (df['对账单价'] * df['实发数量']).round(3)
+                df['差异'] = df['基本金额'] - df['对账金额']
+            case TableType.XSTHD:
+                # 将折扣信息转化为字典,并匹配折扣信息
+                discount_dict = discount_df.set_index('买家账号')['折扣'].to_dict()
+                df['折扣'] = df['买家账号'].map(discount_dict)
+                df['折扣'] = df['折扣'].fillna(df['店铺名称'].map(discount_dict))
+                df['单价'] = df['售价'] / df['折扣']
+                df['对账单价'] = (df['单价'] * df['折扣']).round(3)
+                df['对账金额'] = (df['对账单价'] * df['申请数量']).round(3)
+                df['差异'] = df['申请金额'] - df['对账金额']
+            case _:
+                print(f"错误：文件 '{input_excel_name}' 类型错误。")
+                return
+    except KeyError as e:
+        print(f"处理数据时发生键错误：{e}")
+        return
+    except Exception as e:
+        print(f"处理数据时发生未知错误：{e}")
+        return
 
-    df.to_excel(input_excel_name, sheet_name=sheet_name, index=False)
+    try:
+        df.to_excel(input_excel_name, sheet_name=sheet_name, index=False)
+    except Exception as e:
+        print(f"保存文件 '{input_excel_name}' 时发生错误：{e}")
+        return
+
     print(f'{input_excel_name} 处理完成')
 
 
@@ -274,18 +302,26 @@ def add_pivot_table_to_excel(directory, sheet_name, template_file_):
     except FileNotFoundError:
         print(f"错误：文件 '{template_file_}' 不存在。")
         return
+    except Exception as e:
+        print(f"读取文件时发生错误：{e}")
+        return
 
     # 遍历目录下的所有Excel文件
     for file in tqdm(list(directory_path.glob('*.xlsx')), desc='数据透视进度', unit='file'):
-        # 检查文件是否已经包含该工作簿
-        with pd.ExcelFile(file) as excel_file:
-            if sheet_name in excel_file.sheet_names:
-                print(f"'{sheet_name}' 工作簿已存在于 '{file}' 中.")
-                continue
+        try:
+            # 检查文件是否已经包含该工作簿
+            with pd.ExcelFile(file) as excel_file:
+                if sheet_name in excel_file.sheet_names:
+                    print(f"'{sheet_name}' 工作簿已存在于 '{file}' 中.")
+                    continue
 
-        # 向Excel文件添加新工作簿
-        with ExcelWriter(file, engine='openpyxl', mode='a', if_sheet_exists='new') as writer:
-            df.to_excel(writer, sheet_name=sheet_name, index=False)
+            # 向Excel文件添加新工作簿
+            with ExcelWriter(file, engine='openpyxl', mode='a', if_sheet_exists='new') as writer:
+                df.to_excel(writer, sheet_name=sheet_name, index=False)
+        except PermissionError as e:
+            print(f"无法写入文件 '{file}'：{e}")
+        except Exception as e:
+            print(f"处理文件 '{file}' 时发生错误：{e}")
 
         # print(f"'{file}' 已成功添加新工作簿 '{sheet_name}'.")
     print(f"================= 数据透视结束 ==============")
