@@ -273,10 +273,10 @@ def data_handle(table_type, input_excel_name, discount_excel_name):
                 print(f"错误：文件 '{input_excel_name}' 类型错误。")
                 return
     except KeyError as e:
-        print(f"处理数据时发生键错误：{e}")
+        print(f"文件 '{input_excel_name}' 处理数据时发生键错误：{e}")
         return
     except Exception as e:
-        print(f"处理数据时发生未知错误：{e}")
+        print(f"文件 '{input_excel_name}' 处理数据时发生未知错误：{e}")
         return
 
     try:
@@ -310,7 +310,7 @@ def add_pivot_table_to_excel(directory, sheet_name, _template_file):
         print(f"错误：文件 '{_template_file}' 不存在。")
         return
     except Exception as e:
-        print(f"读取文件时发生错误：{e}")
+        print(f"读取文件'{_template_file}'时发生错误：{e}")
         return
 
     # 遍历目录下的所有Excel文件
