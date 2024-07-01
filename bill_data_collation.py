@@ -31,12 +31,12 @@ def clean_filename(filename):
 
 def save_groups(grouped, sheet_name, output_dir):
     for group_name, group in tqdm(grouped, desc='分类文件正在保存', unit='file'):
-        output_path = os.path.join(output_dir, clean_filename(f"{group_name}.xlsx"))
-        if not os.path.exists(output_path):
-            with ExcelWriter(output_path, engine='openpyxl') as writer:
+        _output_path = os.path.join(output_dir, clean_filename(f"{group_name}.xlsx"))
+        if not os.path.exists(_output_path):
+            with ExcelWriter(_output_path, engine='openpyxl') as writer:
                 group.to_excel(writer, sheet_name=sheet_name, index=False)
         else:
-            with ExcelWriter(output_path, engine='openpyxl', mode='a', if_sheet_exists='new') as writer:
+            with ExcelWriter(_output_path, engine='openpyxl', mode='a', if_sheet_exists='new') as writer:
                 group.to_excel(writer, sheet_name=sheet_name, index=False)
 
 
@@ -281,7 +281,7 @@ def data_handle(table_type, input_excel_name, discount_excel_name):
     print(f'{input_excel_name} 处理完成')
 
 
-def add_pivot_table_to_excel(directory, sheet_name, template_file_):
+def add_pivot_table_to_excel(directory, sheet_name, _template_file):
     """
     遍历指定目录下的所有Excel文件，并向每个文件添加一个新的工作簿。
 
@@ -298,9 +298,9 @@ def add_pivot_table_to_excel(directory, sheet_name, template_file_):
     sheet_name_dzd = '对账单'
     try:
         # 尝试加载数据
-        df = pd.read_excel(template_file_, sheet_name=sheet_name_dzd)
+        df = pd.read_excel(_template_file, sheet_name=sheet_name_dzd)
     except FileNotFoundError:
-        print(f"错误：文件 '{template_file_}' 不存在。")
+        print(f"错误：文件 '{_template_file}' 不存在。")
         return
     except Exception as e:
         print(f"读取文件时发生错误：{e}")
